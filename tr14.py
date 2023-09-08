@@ -7,23 +7,23 @@ Original file is located at
     https://colab.research.google.com/drive/1gewLzKFXEeZu2GMWKC9yVhYK5-xbRl3H
 """
 
+import  streamlit as st
 import pickle
-import streamlit as st
+from sklearn.feature_extraction.text import TfidfVectorizer
+from PIL import Image
 import re
 import string
 import nltk
 import spacy
-from sklearn.feature_extraction.text import TfidfVectorizer
-tf1 = TfidfVectorizer()
 
-import nltk
+with open("svm_model.pkl",'rb') as file:
+  model = pickle.load(file)
+
+with open("tfidf_vectorizer.pkl",'rb') as file:
+  vectorizer =pickle.load(file)
 nltk.download('stopwords')
-model_filename = 'svm_model.pkl'
-with open(model_filename, 'rb') as model_file:
-    model = pickle.load(model_file)
+stopwords =nltk.corpus.stopwords.words('english')
 
-
-stopwords = nltk.corpus.stopwords.words('english')
 
 def clean_text(text):
     text = text.lower()
@@ -38,7 +38,6 @@ def tokenization(text):
     return tokens
 
 def remove_stopwords(text):
-    stopwords = nltk.corpus.stopwords.words('english')
     output = " ".join(i for i in text if i not in stopwords)
     return output
 
@@ -48,32 +47,35 @@ def lemmatizer(text):
     sent = [token.lemma_ for token in doc if not token.text in set(stopwords)]
     return ' '.join(sent)
 
-def preprocess_text(text):
-    text = clean_text(text)
-    text = remove_punctuation(text)
-    text = text.lower()
-    text = tokenization(text)
-    text = remove_stopwords(text)
-    text = lemmatizer(text)
-    return text
+st.title("Sentiment Analysis App")
+st.markdown("By MADDIRALA SUDHARANI")
+image = Image.open("main.png")
+st.image(image, use_column_width=True)
 
-st.title("Sentiment Analysis with SVM Model")
+st.subheader("Enter your text here:")
+user_input = st.text_area("")
 
-st.write("Enter a review text, and the model will predict its sentiment (e.g., positive or negative).")
-
-input_text = st.text_area("Enter a review:", "")
+if user_input:
+    user_input = clean_text(user_input)
+    user_input = remove_punctuation(user_input)
+    user_input = user_input.lower()
+    user_input = tokenization(user_input)
+    user_input = remove_stopwords(user_input)
+    user_input = lemmatizer(user_input)
 
 if st.button("Predict"):
-    if input_text:
-        preprocessed_text = preprocess_text(input_text)
-        text_vectorized = tf1.fit_transform([preprocessed_text])
-        prediction = model.predict(text_vectorized)
-        sentiment = "Positive" if prediction == 1 else "Negative"
-        st.write("Sentiment:", sentiment)
+    if user_input:
+        text_vectorized = vectorizer.transform([user_input])
+        prediction = model.predict(text_vectorized)[0]
+        st.header("Prediction:")
+        if prediction == -1:
+            st.subheader("The sentiment of the given text is: Negative")
+        elif prediction == 0:
+            st.subheader("The sentiment of the given text is: Neutral")
+        elif prediction == 1:
+            st.subheader("The sentiment of the given text is: Positive")
     else:
-        st.write("Please enter a review text.")
-
-
+        st.subheader("Please enter a text for prediction.")
 
 import streamlit as st
 import pickle
@@ -87,29 +89,27 @@ import sklearn
 import joblib
 
 # Check the version of Streamlit
-print(f"Streamlit version: {st.__version__}")
+print(f"Streamlit version: {st.version}")
 
 # Check the version of PIL (Pillow)
-pillow_version = Image.__version__
+pillow_version = Image.version
 print(f"Pillow version: {pillow_version}")
 
 # Check the version of re (regular expressions)
-print(f"Python re (regular expressions) version: {re.__version__}")
+print(f"Python re (regular expressions) version: {re.version}")
 
 # Check the version of NLTK (Natural Language Toolkit)
-nltk_version = nltk.__version__
+nltk_version = nltk.version
 print(f"NLTK version: {nltk_version}")
 
 # Check the version of spaCy
-spacy_version = spacy.__version__
+spacy_version = spacy.version
 print(f"spaCy version: {spacy_version}")
 
 # Check the version of scikit-learn
-sklearn_version = sklearn.__version__
+sklearn_version = sklearn.version
 print(f"scikit-learn version: {sklearn_version}")
 
 # Check the version of joblib
-joblib_version = joblib.__version__
+joblib_version = joblib.version
 print(f"joblib version: {joblib_version}")
-
-pip install -q streamlit
